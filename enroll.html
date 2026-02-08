@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Enroll Student</title>
+  <meta name="viewport" content="width=device-width">
+  <script defer src="js/face-api.min.js"></script>
+  <script defer src="js/enroll.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+<header>
+  <h1>Enroll Student</h1>
+</header>
+
+<div class="container">
+  <div class="camera-section">
+    <video id="video" autoplay muted playsinline></video>
+  </div>
+
+  <div class="control-section">
+    <input id="name" placeholder="Student Name">
+    <input id="room" placeholder="Room Number">
+    <button class="primary" onclick="capture()">Capture Face</button>
+    <p id="status"></p>
+  </div>
+</div>
+</body>
+</html>

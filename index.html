@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Q2 Girls Hostel Attendance Management System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script defer src="js/face-api.min.js"></script>
+  <script defer src="js/attendance.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+<header>
+  <h1>Q2 Girls Hostel Attendance Management System</h1>
+</header>
+
+<div class="container">
+  <div class="camera-section">
+    <video id="video" autoplay muted playsinline></video>
+  </div>
+
+  <div class="control-section">
+    <p id="status">Click below to mark attendance</p>
+
+    <button class="primary" onclick="startAttendance()">
+      Mark Attendance
+    </button>
+
+    <a href="enroll.html">
+      <button class="secondary">
+        Enroll Student
+      </button>
+    </a>
+  </div>
+</div>
+</body>
+</html>

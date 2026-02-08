@@ -1,0 +1,66 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #020617;
+  color: white;
+}
+
+header {
+  padding: 15px;
+  text-align: center;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
+}
+
+h1 {
+  font-size: 18px;
+}
+
+.container {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+.camera-section {
+  flex: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+video {
+  width: 95%;
+  border-radius: 16px;
+}
+
+.control-section {
+  flex: 3;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 15px;
+}
+
+button {
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+}
+
+.primary {
+  background: #22c55e;
+  color: black;
+}
+
+.secondary {
+  background: #334155;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+}
