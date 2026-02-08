@@ -5,7 +5,7 @@ const statusText = document.getElementById("status");
 // 📍 Q2 Girls Hostel Location
 const HOSTEL_LAT = 23.2599;
 const HOSTEL_LNG = 77.4126;
-const ALLOWED_RADIUS = 10; // meters
+const ALLOWED_RADIUS = 100; // meters
 
 let matcher;
 let alreadyMarked = false;
