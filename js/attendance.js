@@ -1,21 +1,25 @@
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxGLHhVupOddlZrDHvqBq4n084qT1uFbHV3VPioTmQyImLt66w5QRc3lj09nwp-eh0k/exec";
 const video = document.getElementById("video");
 const statusText = document.getElementById("status");
 
-// 📍 Q2 Girls Hostel Location
-const HOSTEL_LAT = 23.2599;
-const HOSTEL_LNG = 77.4126;
-const ALLOWED_RADIUS = 100; // meters
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxGLHhVupOddlZrDHvqBq4n084qT1uFbHV3VPioTmQyImLt66w5QRc3lj09nwp-eh0k/exec";
+
+// 📍 Q2 Girls Hostel (practical center)
+const HOSTEL_LAT = 23.259933;
+const HOSTEL_LNG = 77.412615;
+const ALLOWED_RADIUS = 300; // meters
 
 let matcher;
 let alreadyMarked = false;
+let lastDistance = 0;
 
+// IST time
 function getIST() {
   return new Date(
     new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
   );
 }
 
+// Distance calc
 function distanceMeters(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -30,31 +34,52 @@ function distanceMeters(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// 🔥 GPS averaging
+function verifyLocation(callback) {
+  let count = 0, latSum = 0, lngSum = 0;
+
+  const watcher = navigator.geolocation.watchPosition(
+    pos => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      if (accuracy > 250) return;
+
+      latSum += latitude;
+      lngSum += longitude;
+      count++;
+
+      if (count >= 3) {
+        navigator.geolocation.clearWatch(watcher);
+        callback(latSum / count, lngSum / count);
+      }
+    },
+    () => alert("Enable GPS and allow location access"),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+// MAIN
 async function startAttendance() {
   const now = getIST();
 
-  if (now.getHours() < 21) {
+  if (now.getHours() < 10) {
     alert("Attendance allowed only between 9 PM to 10 PM IST");
     return;
   }
 
-  statusText.innerText = "Checking location...";
+  statusText.innerText = "Verifying location...";
 
-  navigator.geolocation.getCurrentPosition(async pos => {
-    const d = distanceMeters(
-      pos.coords.latitude,
-      pos.coords.longitude,
-      HOSTEL_LAT,
-      HOSTEL_LNG
+  verifyLocation(async (lat, lng) => {
+    lastDistance = Math.round(
+      distanceMeters(lat, lng, HOSTEL_LAT, HOSTEL_LNG)
     );
 
-    if (d > ALLOWED_RADIUS) {
-      alert("You are not at Q2 Girls Hostel location");
-      statusText.innerText = "Outside hostel location";
+    if (lastDistance > ALLOWED_RADIUS) {
+      alert(`Outside hostel area\nDistance: ${lastDistance} m`);
+      statusText.innerText = "Outside hostel boundary";
       return;
     }
 
-    statusText.innerText = "Loading face models...";
+    statusText.innerText = "Location verified Loading models...";
 
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri("./models"),
@@ -79,8 +104,7 @@ async function startAttendance() {
 
     statusText.innerText = "Detecting face...";
     detectLoop();
-
-  }, () => alert("Enable GPS to mark attendance"), { enableHighAccuracy: true });
+  });
 }
 
 async function detectLoop() {
@@ -104,7 +128,6 @@ async function detectLoop() {
 function submitAttendance(label) {
   const [name, room] = label.split("|");
   const now = getIST();
-
   const status = now.getHours() >= 22 ? "Late" : "Present";
 
   fetch(GAS_URL, {
@@ -115,11 +138,14 @@ function submitAttendance(label) {
       room,
       date: now.toLocaleDateString("en-GB"),
       time: now.toLocaleTimeString(),
-      status
+      status,
+      distance: lastDistance
     })
   });
 
-  statusText.innerText = `Attendance marked (${status})`;
+  statusText.innerText =
+    `Attendance marked (${status}) • Distance: ${lastDistance} m`;
+
   alreadyMarked = true;
   video.srcObject.getTracks().forEach(t => t.stop());
 }
