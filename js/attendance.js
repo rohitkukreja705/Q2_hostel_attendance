@@ -61,7 +61,7 @@ function verifyLocation(callback) {
 async function startAttendance() {
   const now = getIST();
 
-  if (now.getHours() < 10) {
+  if (now.getHours() < 21) {
     alert("Attendance allowed only between 9 PM to 10 PM IST");
     return;
   }
