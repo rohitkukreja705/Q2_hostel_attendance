@@ -13,13 +13,31 @@ let alreadyMarked = false;
 let lastDistance = 0;
 
 // IST time
-function getIST() {
-  return new Date(
+function updateDateTime() {
+  const now = new Date(
     new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
   );
+  document.getElementById("liveDate").innerText =
+    now.toLocaleDateString("en-GB");
+  document.getElementById("liveTime").innerText =
+    now.toLocaleTimeString();
 }
+setInterval(updateDateTime, 1000);
+updateDateTime();
 
-// Distance calc
+// Live GPS display
+navigator.geolocation.getCurrentPosition(
+  pos => {
+    document.getElementById("liveGPS").innerText =
+      `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+  },
+  () => {
+    document.getElementById("liveGPS").innerText = "GPS unavailable";
+  },
+  { enableHighAccuracy: true }
+);
+
+// Distance calculation
 function distanceMeters(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -34,17 +52,16 @@ function distanceMeters(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// 🔥 GPS averaging
+// GPS averaging
 function verifyLocation(callback) {
   let count = 0, latSum = 0, lngSum = 0;
 
   const watcher = navigator.geolocation.watchPosition(
     pos => {
-      const { latitude, longitude, accuracy } = pos.coords;
-      if (accuracy > 250) return;
+      if (pos.coords.accuracy > 250) return;
 
-      latSum += latitude;
-      lngSum += longitude;
+      latSum += pos.coords.latitude;
+      lngSum += pos.coords.longitude;
       count++;
 
       if (count >= 3) {
@@ -52,21 +69,21 @@ function verifyLocation(callback) {
         callback(latSum / count, lngSum / count);
       }
     },
-    () => alert("Enable GPS and allow location access"),
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    () => alert("Enable GPS"),
+    { enableHighAccuracy: true }
   );
 }
 
-// MAIN
+// Start attendance
 async function startAttendance() {
-  const now = getIST();
+  const now = new Date(
+    new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
+  );
 
-  if (now.getHours() < 10) {
+  if (now.getHours() < 21) {
     alert("Attendance allowed only between 9 PM to 10 PM IST");
     return;
   }
-
-  statusText.innerText = "Verifying location...";
 
   verifyLocation(async (lat, lng) => {
     lastDistance = Math.round(
@@ -75,11 +92,8 @@ async function startAttendance() {
 
     if (lastDistance > ALLOWED_RADIUS) {
       alert(`Outside hostel area\nDistance: ${lastDistance} m`);
-      statusText.innerText = "Outside hostel boundary";
       return;
     }
-
-    statusText.innerText = "Location verified Loading models...";
 
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri("./models"),
@@ -102,7 +116,6 @@ async function startAttendance() {
       0.45
     );
 
-    statusText.innerText = "Detecting face...";
     detectLoop();
   });
 }
@@ -127,7 +140,10 @@ async function detectLoop() {
 
 function submitAttendance(label) {
   const [name, room] = label.split("|");
-  const now = getIST();
+  const now = new Date(
+    new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
+  );
+
   const status = now.getHours() >= 22 ? "Late" : "Present";
 
   fetch(GAS_URL, {
@@ -143,9 +159,48 @@ function submitAttendance(label) {
     })
   });
 
-  statusText.innerText =
-    `Attendance marked (${status}) • Distance: ${lastDistance} m`;
-
+  alert(`Attendance marked successfully!\nStatus: ${status}`);
   alreadyMarked = true;
-  video.srcObject.getTracks().forEach(t => t.stop());
+}
+
+// Leave
+function submitLeave() {
+  const name = prompt("Enter your Name");
+  const room = prompt("Enter Room Number");
+  const reason = prompt("Reason for Leave");
+  if (!name || !room || !reason) return;
+
+  fetch(GAS_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      type: "LEAVE",
+      name,
+      room,
+      reason,
+      date: new Date().toLocaleDateString("en-GB")
+    })
+  });
+
+  alert("Leave request submitted");
+}
+
+// Complaint
+function submitComplaint() {
+  const name = prompt("Enter your Name");
+  const room = prompt("Enter Room Number");
+  const complaint = prompt("Enter Complaint");
+  if (!name || !room || !complaint) return;
+
+  fetch(GAS_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      type: "COMPLAINT",
+      name,
+      room,
+      complaint,
+      date: new Date().toLocaleDateString("en-GB")
+    })
+  });
+
+  alert("Complaint submitted");
 }
