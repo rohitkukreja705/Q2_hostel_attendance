@@ -9,8 +9,15 @@
 </head>
 
 <body>
+
 <header>
   <h1>Q2 Girls Hostel Attendance Management System</h1>
+
+  <div class="top-info">
+    <div id="liveDate"></div>
+    <div id="liveTime"></div>
+    <div id="liveGPS"></div>
+  </div>
 </header>
 
 <div class="container">
@@ -21,16 +28,17 @@
   <div class="control-section">
     <p id="status">Click below to mark attendance</p>
 
-    <button class="primary" onclick="startAttendance()">
-      Mark Attendance
-    </button>
+    <button class="primary" onclick="startAttendance()">Mark Attendance</button>
+
+    <button class="leave-btn" onclick="submitLeave()">Leave Request</button>
+
+    <button class="complaint-btn" onclick="submitComplaint()">Complaint</button>
 
     <a href="enroll.html">
-      <button class="secondary">
-        Enroll Student
-      </button>
+      <button class="secondary">Enroll Student</button>
     </a>
   </div>
 </div>
+
 </body>
 </html>
