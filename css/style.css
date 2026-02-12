@@ -5,68 +5,60 @@ body {
   color: white;
 }
 
-header {
-  padding: 15px;
+.main-header {
   text-align: center;
+  padding: 15px 10px;
   border-bottom: 1px solid #1e293b;
-  position: relative;
 }
 
-h1 {
+.main-header h1 {
   font-size: 18px;
-  margin: 0;
+  margin-bottom: 8px;
 }
 
 .top-info {
-  position: absolute;
-  top: 10px;
-  right: 20px;
   font-size: 13px;
-  text-align: right;
+  opacity: 0.85;
 }
 
 .container {
   display: flex;
-  height: calc(100vh - 60px);
+  flex-direction: column;
 }
 
 .camera-section {
-  flex: 7;
+  width: 100%;
+  padding: 10px;
   display: flex;
-  align-items: center;
   justify-content: center;
 }
 
 video {
-  width: 95%;
-  border-radius: 16px;
+  width: 100%;
+  max-height: 40vh;
+  border-radius: 14px;
+  object-fit: cover;
 }
 
 .control-section {
-  flex: 3;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 15px;
 }
 
 button {
   padding: 14px;
   font-size: 16px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
+  width: 100%;
 }
 
 .primary {
   background: #22c55e;
   color: black;
-}
-
-.secondary {
-  background: #334155;
-  color: white;
 }
 
 .leave-btn {
@@ -79,15 +71,35 @@ button {
   color: white;
 }
 
+.secondary {
+  background: #334155;
+  color: white;
+}
+
 #status {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: bold;
   text-align: center;
   color: #22c55e;
 }
 
-@media (max-width: 768px) {
+/* Desktop layout */
+@media (min-width: 768px) {
   .container {
-    flex-direction: column;
+    flex-direction: row;
+  }
+
+  .camera-section {
+    flex: 7;
+    max-height: 80vh;
+  }
+
+  .control-section {
+    flex: 3;
+    justify-content: center;
+  }
+
+  video {
+    max-height: 80vh;
   }
 }
