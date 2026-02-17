@@ -5,7 +5,7 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbxGLHhVupOddlZrDHvqBq4n
 // 📍 Q2 Girls Hostel (practical center)
 const HOSTEL_LAT = 23.250274224197714;
 const HOSTEL_LNG = 77.49987567356052;
-const ALLOWED_RADIUS = 50; // meters
+const ALLOWED_RADIUS = 10; // meters
 
 let matcher;
 let alreadyMarked = false;
