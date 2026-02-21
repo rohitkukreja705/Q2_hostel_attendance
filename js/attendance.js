@@ -189,7 +189,7 @@ async function startAttendance(){
     matcher=new faceapi.FaceMatcher(
       faces.map(f=>new faceapi.LabeledFaceDescriptors(f.label,f.descriptors.map(d=>new Float32Array(d)))),0.6
     );
-    detectLoop();
+    startCaptureSequence();
   });
 }
 
