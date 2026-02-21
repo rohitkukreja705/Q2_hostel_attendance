@@ -8,6 +8,7 @@ const capturePanel = document.getElementById("capturePanel");
 const countdownEl = document.getElementById("countdown");
 const captureText = document.getElementById("captureText");
 let matcher, alreadyMarked=false, lastDistance=0, userLat, userLng;
+let currentIP = null;
 const ipEl = document.getElementById("liveIP");
 const loader=document.getElementById("loader");
 const progressBar=document.getElementById("progressBar");
@@ -87,15 +88,14 @@ function verifyLocation(cb){
 }
 
 async function showIP() {
-
   ipEl.innerText = "🌐 Getting IP...";
-
   try {
     const res = await fetch("https://api.ipify.org?format=json");
     const data = await res.json();
 
-    ipEl.innerText = "🌐 " + data.ip;
+    currentIP = data.ip;   // ⭐ THIS LINE FIXES ERROR
 
+    ipEl.innerText = "🌐 " + currentIP;
   } catch (err) {
     console.error("IP fetch error:", err);
     ipEl.innerText = "🌐 IP unavailable";
