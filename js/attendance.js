@@ -111,7 +111,7 @@ async function getPublicIP(){
 function getIST(){ const d=new Date(); return parseInt(new Intl.DateTimeFormat("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",hour12:false}).format(d)); }
 
 async function startAttendance(){
-  if(getIST()<21){ alert("Attendance allowed 9PM–10PM"); return; }
+  if(getIST()<10){ alert("Attendance allowed 9PM–10PM"); return; }
 
   showLoader(); setProgress(15);
 
