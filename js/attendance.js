@@ -117,11 +117,16 @@ async function startAttendance(){
 
   const ip=await getPublicIP();
     // 🔹 PREFIX CHECK (matches Apps Script)
-  if(!currentIP.startsWith("106.222.")){
-    hideLoader();
-    alert("Connect to Hostel WiFi");
-    return;
-  }
+  const allowedPrefixes = ["106.222.","223.229."];
+  const isAllowed = allowedPrefixes.some(prefix =>
+	  currentIP && currentIP.startsWith(prefix)
+	);
+	
+	if(!isAllowed){
+	  hideLoader();
+	  alert("Connect to Hostel WiFi");
+	  return;
+	}
 
   stepIP.classList.add("step-done");
   setProgress(35);
