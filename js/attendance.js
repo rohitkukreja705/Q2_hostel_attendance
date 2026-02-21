@@ -168,10 +168,16 @@ async function startAttendance(){
     stepLocation.classList.add("step-done"); setProgress(60);
 
     await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri("./models"),
-      faceapi.nets.faceLandmark68Net.loadFromUri("./models"),
-      faceapi.nets.faceRecognitionNet.loadFromUri("./models")
-    ]);
+  faceapi.nets.tinyFaceDetector.loadFromUri("./models"),
+  faceapi.nets.faceLandmark68Net.loadFromUri("./models"),
+  faceapi.nets.faceRecognitionNet.loadFromUri("./models")
+	]).catch(err => {
+	  hideLoader();
+	  alert("Face models failed to load. Check /models folder.");
+	  console.error(err);
+	});
+	// await Promise.all([...])
+    alert("Models loaded");
     stepFace.classList.add("step-done"); setProgress(80);
 
     const stream=await navigator.mediaDevices.getUserMedia({video:true});
