@@ -116,9 +116,15 @@ async function startAttendance(){
   showLoader(); setProgress(15);
 
   const ip=await getPublicIP();
-  if(ip!=="106.222.217.157"){ hideLoader(); alert("Connect to Hostel WiFi"); return;}
-  stepIP.classList.add("step-done"); setProgress(35);
+    // 🔹 PREFIX CHECK (matches Apps Script)
+  if(!currentIP.startsWith("106.222.")){
+    hideLoader();
+    alert("Connect to Hostel WiFi");
+    return;
+  }
 
+  stepIP.classList.add("step-done");
+  setProgress(35);
   verifyLocation(async(lat,lng)=>{
     lastDistance=Math.round(distanceMeters(lat,lng,HOSTEL_LAT,HOSTEL_LNG));
     if(lastDistance>ALLOWED_RADIUS){ hideLoader(); alert("Outside hostel"); return;}
