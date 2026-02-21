@@ -5,7 +5,8 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbxGLHhVupOddlZrDHvqBq4n
 const HOSTEL_LAT = 23.250761280;
 const HOSTEL_LNG = 77.499552907;
 const ALLOWED_RADIUS = 50; // meters
-
+const captureOverlay = document.getElementById("captureOverlay");
+const countdownEl = document.getElementById("countdown");
 let matcher, alreadyMarked=false, lastDistance=0, userLat, userLng;
 
 const loader=document.getElementById("loader");
@@ -114,7 +115,10 @@ async function startAttendance(){
     stepFace.classList.add("step-done"); setProgress(80);
 
     const stream=await navigator.mediaDevices.getUserMedia({video:true});
-    video.srcObject=stream;
+    video.srcObject = stream;
+
+    hideLoader();
+    startCaptureSequence();
 
     const faces=await fetch(GAS_URL).then(r=>r.json());
     matcher=new faceapi.FaceMatcher(
@@ -124,12 +128,44 @@ async function startAttendance(){
   });
 }
 
-async function detectLoop(){
-  if(alreadyMarked) return;
-  const d=await faceapi.detectSingleFace(video,new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-  if(!d) return setTimeout(detectLoop,2000);
-  const match=matcher.findBestMatch(d.descriptor);
-  if(match.label==="unknown"){ hideLoader(); alert("Non enrolled user detected."); stopCamera(); return;}
+function startCaptureSequence() {
+  captureOverlay.classList.remove("hidden");
+
+  let timeLeft = 5;
+  countdownEl.innerText = timeLeft;
+
+  const timer = setInterval(() => {
+    timeLeft--;
+    countdownEl.innerText = timeLeft;
+
+    if (timeLeft === 0) {
+      clearInterval(timer);
+      captureOverlay.classList.add("hidden");
+      detectAndSubmit();
+    }
+  }, 1000);
+}
+
+async function detectAndSubmit() {
+  const detection = await faceapi
+    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+    .withFaceLandmarks()
+    .withFaceDescriptor();
+
+  if (!detection) {
+    alert("Face not detected. Try again.");
+    stopCamera();
+    return;
+  }
+
+  const match = matcher.findBestMatch(detection.descriptor);
+
+  if (match.label === "unknown") {
+    alert("Non enrolled user detected.");
+    stopCamera();
+    return;
+  }
+
   submitAttendance(match.label);
 }
 
@@ -151,5 +187,9 @@ async function submitAttendance(label){
   if(resp==="IP_BLOCKED"){ alert("Connect to Hostel WiFi"); stopCamera(); return;}
 
   alert(`Attendance marked\nStatus: ${status}`);
+  
+  statusText.innerText = "✅ Attendance Marked";
+  statusText.classList.add("highlight-success");
+  
   stopCamera();
 }
