@@ -106,7 +106,7 @@ function getISTHour(){
 // ================= START ATTENDANCE =================
 async function startAttendance(){
 
-  if(getISTHour()<21){
+  if(getISTHour()<10){
     alert("Attendance allowed 9PM–10PM");
     return;
   }
