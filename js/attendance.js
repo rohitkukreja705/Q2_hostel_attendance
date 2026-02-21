@@ -30,23 +30,31 @@ function updateDateTime(){
 }
 setInterval(updateDateTime,1000); updateDateTime();
 
+const gpsEl = document.getElementById("liveGPS");
+
 function updateGPS() {
+
   if (!navigator.geolocation) {
-    gpsEl.innerText = "GPS not supported";
+    gpsEl.innerText = "📍 GPS not supported";
     return;
   }
 
-  gpsEl.innerText = "Getting location...";
+  gpsEl.innerText = "📍 Getting location...";
 
   navigator.geolocation.getCurrentPosition(
-    function (pos) {
-      const lat = pos.coords.latitude.toFixed(9);
-      const lng = pos.coords.longitude.toFixed(9);
-      gpsEl.innerText = `${lat}, ${lng}`;
+    function(position) {
+
+      const lat = position.coords.latitude.toFixed(9);
+      const lng = position.coords.longitude.toFixed(9);
+
+      gpsEl.innerText = "📍 " + lat + ", " + lng;
+
     },
-    function (err) {
-      console.error("GPS Error:", err);
-      gpsEl.innerText = "Location blocked";
+    function(error) {
+
+      console.error("GPS Error:", error);
+      gpsEl.innerText = "📍 Location blocked";
+
     },
     {
       enableHighAccuracy: true,
@@ -57,7 +65,6 @@ function updateGPS() {
 }
 
 updateGPS();
-
 function distanceMeters(a,b,c,d){
   const R=6371000, dLat=(c-a)*Math.PI/180, dLon=(d-b)*Math.PI/180;
   const x=Math.sin(dLat/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
