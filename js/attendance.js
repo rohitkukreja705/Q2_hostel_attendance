@@ -30,9 +30,33 @@ function updateDateTime(){
 }
 setInterval(updateDateTime,1000); updateDateTime();
 
-navigator.geolocation.getCurrentPosition(pos=>{
-  document.getElementById("liveGPS").innerText=`${pos.coords.latitude.toFixed(9)}, ${pos.coords.longitude.toFixed(9)}`;
-},{},{enableHighAccuracy:true});
+function updateGPS() {
+  if (!navigator.geolocation) {
+    gpsEl.innerText = "GPS not supported";
+    return;
+  }
+
+  gpsEl.innerText = "Getting location...";
+
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      const lat = pos.coords.latitude.toFixed(9);
+      const lng = pos.coords.longitude.toFixed(9);
+      gpsEl.innerText = `${lat}, ${lng}`;
+    },
+    function (err) {
+      console.error("GPS Error:", err);
+      gpsEl.innerText = "Location blocked";
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
+    }
+  );
+}
+
+updateGPS();
 
 function distanceMeters(a,b,c,d){
   const R=6371000, dLat=(c-a)*Math.PI/180, dLon=(d-b)*Math.PI/180;
