@@ -74,17 +74,48 @@ function distanceMeters(a,b,c,d){
   return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
-function verifyLocation(cb){
-  let count=0, lat=0,lng=0;
-  const w=navigator.geolocation.watchPosition(p=>{
-    if(p.coords.accuracy>250) return;
-    lat+=p.coords.latitude; lng+=p.coords.longitude; count++;
-    if(count>=3){
-      navigator.geolocation.clearWatch(w);
-      userLat=(lat/count).toFixed(9); userLng=(lng/count).toFixed(9);
-      cb(parseFloat(userLat),parseFloat(userLng));
+function verifyLocation(callback){
+
+  if(!navigator.geolocation){
+    alert("GPS not supported");
+    hideLoader();
+    return;
+  }
+
+  let resolved = false;
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      resolved = true;
+
+      userLat = pos.coords.latitude.toFixed(9);
+      userLng = pos.coords.longitude.toFixed(9);
+
+      callback(parseFloat(userLat), parseFloat(userLng));
+    },
+    err => {
+      console.warn("High accuracy failed, trying fallback");
+
+      // fallback without strict accuracy
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          userLat = pos.coords.latitude.toFixed(9);
+          userLng = pos.coords.longitude.toFixed(9);
+
+          callback(parseFloat(userLat), parseFloat(userLng));
+        },
+        () => {
+          hideLoader();
+          alert("Unable to get location. Enable GPS & refresh.");
+        }
+      );
+    },
+    {
+      enableHighAccuracy:true,
+      timeout:7000,
+      maximumAge:0
     }
-  });
+  );
 }
 
 async function showIP() {
