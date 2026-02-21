@@ -4,6 +4,31 @@ body {
   background: #020617;
   color: white;
 }
+.camera-section {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+
+.capture-panel {
+  width:100%;
+  text-align:center;
+  padding:10px;
+  background:#020617;
+  border:1px solid #1e293b;
+  border-radius:10px;
+}
+
+#countdown {
+  font-size:32px;
+  color:#22c55e;
+  font-weight:bold;
+}
+
+.hidden {
+  display:none;
+}
 .capture-overlay {
   position: fixed;
   top:0; left:0;
