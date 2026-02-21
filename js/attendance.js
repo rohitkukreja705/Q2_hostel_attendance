@@ -1,7 +1,7 @@
 const video = document.getElementById("video");
 const statusText = document.getElementById("status");
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxGLHhVupOddlZrDHvqBq4n084qT1uFbHV3VPioTmQyImLt66w5QRc3lj09nwp-eh0k/exec";
-
+const ipEl = document.getElementById("liveIP");
 const HOSTEL_LAT = 23.250761280;
 const HOSTEL_LNG = 77.499552907;
 const ALLOWED_RADIUS = 50; // meters
@@ -67,6 +67,7 @@ function updateGPS() {
 }
 
 updateGPS();
+showIP();
 function distanceMeters(a,b,c,d){
   const R=6371000, dLat=(c-a)*Math.PI/180, dLon=(d-b)*Math.PI/180;
   const x=Math.sin(dLat/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
@@ -180,6 +181,22 @@ async function detectAndSubmit() {
   }
 
   submitAttendance(bestMatch.label);
+}
+
+async function showIP() {
+
+  ipEl.innerText = "🌐 Getting IP...";
+
+  try {
+    const res = await fetch("https://api.ipify.org?format=json");
+    const data = await res.json();
+
+    ipEl.innerText = "🌐 " + data.ip;
+
+  } catch (err) {
+    console.error("IP fetch error:", err);
+    ipEl.innerText = "🌐 IP unavailable";
+  }
 }
 
 async function submitAttendance(label){
