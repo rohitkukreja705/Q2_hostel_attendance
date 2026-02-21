@@ -1,8 +1,10 @@
 const video = document.getElementById("video");
 const statusText = document.getElementById("status");
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxGLHhVupOddlZrDHvqBq4n084qT1uFbHV3VPioTmQyImLt66w5QRc3lj09nwp-eh0k/exec";
-const HOSTEL_LAT = 23.250761280;
-const HOSTEL_LNG = 77.499552907;
+//const HOSTEL_LAT = 23.250761280;
+//const HOSTEL_LNG = 77.499552907;
+const HOSTEL_LAT = 23.281280329;
+const HOSTEL_LNG = 77.468973571;
 const ALLOWED_RADIUS = 50; // meters
 const capturePanel = document.getElementById("capturePanel");
 const countdownEl = document.getElementById("countdown");
