@@ -5,8 +5,9 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbxGLHhVupOddlZrDHvqBq4n
 const HOSTEL_LAT = 23.250761280;
 const HOSTEL_LNG = 77.499552907;
 const ALLOWED_RADIUS = 50; // meters
-const captureOverlay = document.getElementById("captureOverlay");
+const capturePanel = document.getElementById("capturePanel");
 const countdownEl = document.getElementById("countdown");
+const captureText = document.getElementById("captureText");
 let matcher, alreadyMarked=false, lastDistance=0, userLat, userLng;
 
 const loader=document.getElementById("loader");
@@ -122,14 +123,16 @@ async function startAttendance(){
 
     const faces=await fetch(GAS_URL).then(r=>r.json());
     matcher=new faceapi.FaceMatcher(
-      faces.map(f=>new faceapi.LabeledFaceDescriptors(f.label,f.descriptors.map(d=>new Float32Array(d)))),0.45
+      faces.map(f=>new faceapi.LabeledFaceDescriptors(f.label,f.descriptors.map(d=>new Float32Array(d)))),0.6
     );
     detectLoop();
   });
 }
 
 function startCaptureSequence() {
-  captureOverlay.classList.remove("hidden");
+
+  capturePanel.classList.remove("hidden");
+  captureText.innerText = "Look straight at camera";
 
   let timeLeft = 5;
   countdownEl.innerText = timeLeft;
@@ -140,33 +143,43 @@ function startCaptureSequence() {
 
     if (timeLeft === 0) {
       clearInterval(timer);
-      captureOverlay.classList.add("hidden");
+      capturePanel.classList.add("hidden");
       detectAndSubmit();
     }
   }, 1000);
 }
 
 async function detectAndSubmit() {
-  const detection = await faceapi
-    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-    .withFaceLandmarks()
-    .withFaceDescriptor();
 
-  if (!detection) {
-    alert("Face not detected. Try again.");
+  let attempts = 0;
+  let bestMatch = null;
+
+  while (attempts < 5) {
+
+    const detection = await faceapi.detectSingleFace(
+	  video,
+	  new faceapi.TinyFaceDetectorOptions({
+		inputSize: 320,
+		scoreThreshold: 0.5
+	  })
+	).withFaceLandmarks().withFaceDescriptor();
+
+    if (detection) {
+      bestMatch = matcher.findBestMatch(detection.descriptor);
+      if (bestMatch.label !== "unknown") break;
+    }
+
+    attempts++;
+    await new Promise(r => setTimeout(r, 600));
+  }
+
+  if (!bestMatch || bestMatch.label === "unknown") {
+    alert("Face not recognized. Please try again in good lighting.");
     stopCamera();
     return;
   }
 
-  const match = matcher.findBestMatch(detection.descriptor);
-
-  if (match.label === "unknown") {
-    alert("Non enrolled user detected.");
-    stopCamera();
-    return;
-  }
-
-  submitAttendance(match.label);
+  submitAttendance(bestMatch.label);
 }
 
 async function submitAttendance(label){
