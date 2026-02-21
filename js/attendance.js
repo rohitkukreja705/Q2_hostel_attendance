@@ -4,213 +4,191 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbxGLHhVupOddlZrDHvqBq4n
 const HOSTEL_LAT = 23.250761280;
 const HOSTEL_LNG = 77.499552907;
 const ALLOWED_RADIUS = 50; // meters
-// ===== ELEMENTS =====
 const capturePanel = document.getElementById("capturePanel");
 const countdownEl = document.getElementById("countdown");
 const captureText = document.getElementById("captureText");
-
+let matcher, alreadyMarked=false, lastDistance=0, userLat, userLng;
 const ipEl = document.getElementById("liveIP");
-const gpsEl = document.getElementById("liveGPS");
+const loader=document.getElementById("loader");
+const progressBar=document.getElementById("progressBar");
+const stepIP=document.getElementById("step-ip");
+const stepLocation=document.getElementById("step-location");
+const stepFace=document.getElementById("step-face");
+const stepSubmit=document.getElementById("step-submit");
 
-const loader = document.getElementById("loader");
-const progressBar = document.getElementById("progressBar");
-
-const stepIP = document.getElementById("step-ip");
-const stepLocation = document.getElementById("step-location");
-const stepFace = document.getElementById("step-face");
-const stepSubmit = document.getElementById("step-submit");
-
-let matcher;
-let alreadyMarked = false;
-let lastDistance = 0;
-let userLat = null;
-let userLng = null;
-let currentIP = null;
-
-// ================= LOADER =================
 function showLoader(){ loader.classList.remove("hidden"); progressBar.style.width="0%"; }
 function hideLoader(){ loader.classList.add("hidden"); }
 function setProgress(p){ progressBar.style.width=p+"%"; }
 
-// ================= CAMERA =================
 function stopCamera(){
-  if(video.srcObject){
-    video.srcObject.getTracks().forEach(t=>t.stop());
-    video.srcObject=null;
-  }
+  if(video.srcObject){ video.srcObject.getTracks().forEach(t=>t.stop()); video.srcObject=null; }
 }
 
-// ================= DATE TIME =================
 function updateDateTime(){
   const now=new Date();
-  document.getElementById("liveDate").innerText =
-    new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata"}).format(now);
-
-  document.getElementById("liveTime").innerText =
-    new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",
-      hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(now);
+  document.getElementById("liveDate").innerText=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata"}).format(now);
+  document.getElementById("liveTime").innerText=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(now);
 }
-setInterval(updateDateTime,1000);
-updateDateTime();
+setInterval(updateDateTime,1000); updateDateTime();
 
-// ================= GPS =================
-function updateGPS(){
-  if(!navigator.geolocation){
-    gpsEl.innerText="📍 GPS not supported";
+const gpsEl = document.getElementById("liveGPS");
+
+function updateGPS() {
+
+  if (!navigator.geolocation) {
+    gpsEl.innerText = "📍 GPS not supported";
     return;
   }
 
-  gpsEl.innerText="📍 Getting location...";
+  gpsEl.innerText = "📍 Getting location...";
 
   navigator.geolocation.getCurrentPosition(
-    pos=>{
-      userLat = pos.coords.latitude.toFixed(9);
-      userLng = pos.coords.longitude.toFixed(9);
-      gpsEl.innerText = `${userLat}, ${userLng}`;
+    function(position) {
+
+      const lat = position.coords.latitude.toFixed(9);
+      const lng = position.coords.longitude.toFixed(9);
+
+      gpsEl.innerText = lat + ", " + lng;
+
     },
-    ()=> gpsEl.innerText="📍 Location blocked",
-    {enableHighAccuracy:true}
+    function(error) {
+
+      console.error("GPS Error:", error);
+      gpsEl.innerText = "📍 Location blocked";
+
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
+    }
   );
 }
+
 updateGPS();
-
-// ================= IP =================
-async function showIP(){
-  ipEl.innerText="🌐 Getting IP...";
-  try{
-    const res = await fetch("https://api.ipify.org?format=json");
-    const data = await res.json();
-    currentIP = data.ip;
-    ipEl.innerText = "🌐 " + currentIP;
-  }catch{
-    ipEl.innerText="🌐 IP unavailable";
-  }
-}
 showIP();
-
-// ================= UTIL =================
 function distanceMeters(a,b,c,d){
-  const R=6371000;
-  const dLat=(c-a)*Math.PI/180;
-  const dLon=(d-b)*Math.PI/180;
-  const x=Math.sin(dLat/2)**2 +
-    Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+  const R=6371000, dLat=(c-a)*Math.PI/180, dLon=(d-b)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
   return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
-function getISTHour(){
-  return parseInt(new Intl.DateTimeFormat("en-IN",
-    {timeZone:"Asia/Kolkata",hour:"2-digit",hour12:false}).format(new Date()));
+function verifyLocation(cb){
+  let count=0, lat=0,lng=0;
+  const w=navigator.geolocation.watchPosition(p=>{
+    if(p.coords.accuracy>250) return;
+    lat+=p.coords.latitude; lng+=p.coords.longitude; count++;
+    if(count>=3){
+      navigator.geolocation.clearWatch(w);
+      userLat=(lat/count).toFixed(9); userLng=(lng/count).toFixed(9);
+      cb(parseFloat(userLat),parseFloat(userLng));
+    }
+  });
 }
 
-// ================= START ATTENDANCE =================
+async function showIP() {
+
+  ipEl.innerText = "🌐 Getting IP...";
+
+  try {
+    const res = await fetch("https://api.ipify.org?format=json");
+    const data = await res.json();
+
+    ipEl.innerText = "🌐 " + data.ip;
+
+  } catch (err) {
+    console.error("IP fetch error:", err);
+    ipEl.innerText = "🌐 IP unavailable";
+  }
+}
+
+
+async function getPublicIP(){
+  try{ return (await fetch("https://api.ipify.org?format=json").then(r=>r.json())).ip;}
+  catch{return "UNKNOWN";}
+}
+
+function getIST(){ const d=new Date(); return parseInt(new Intl.DateTimeFormat("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",hour12:false}).format(d)); }
+
 async function startAttendance(){
+  if(getIST()<21){ alert("Attendance allowed 9PM–10PM"); return; }
 
-  if(getISTHour()<10){
-    alert("Attendance allowed 9PM–10PM");
-    return;
-  }
+  showLoader(); setProgress(15);
 
-  showLoader();
-  setProgress(15);
+  const ip=await getPublicIP();
+  if(ip!=="106.222.217.157"){ hideLoader(); alert("Connect to Hostel WiFi"); return;}
+  stepIP.classList.add("step-done"); setProgress(35);
 
-  if(!currentIP) await showIP();
+  verifyLocation(async(lat,lng)=>{
+    lastDistance=Math.round(distanceMeters(lat,lng,HOSTEL_LAT,HOSTEL_LNG));
+    if(lastDistance>ALLOWED_RADIUS){ hideLoader(); alert("Outside hostel"); return;}
 
-  // 🔹 PREFIX CHECK (matches Apps Script)
-  if(!currentIP.startsWith("106.222.")){
-    hideLoader();
-    alert("Connect to Hostel WiFi");
-    return;
-  }
+    stepLocation.classList.add("step-done"); setProgress(60);
 
-  stepIP.classList.add("step-done");
-  setProgress(35);
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri("./models"),
+      faceapi.nets.faceLandmark68Net.loadFromUri("./models"),
+      faceapi.nets.faceRecognitionNet.loadFromUri("./models")
+    ]);
+    stepFace.classList.add("step-done"); setProgress(80);
 
-  if(!userLat || !userLng){
-    updateGPS();
-    await new Promise(r=>setTimeout(r,2000));
-  }
+    const stream=await navigator.mediaDevices.getUserMedia({video:true});
+    video.srcObject=stream;
 
-  lastDistance = Math.round(distanceMeters(userLat,userLng,HOSTEL_LAT,HOSTEL_LNG));
-
-  if(lastDistance > ALLOWED_RADIUS){
-    hideLoader();
-    alert(`Outside hostel area\nDistance: ${lastDistance} m`);
-    return;
-  }
-
-  stepLocation.classList.add("step-done");
-  setProgress(60);
-
-  await Promise.all([
-    faceapi.nets.tinyFaceDetector.loadFromUri("./models"),
-    faceapi.nets.faceLandmark68Net.loadFromUri("./models"),
-    faceapi.nets.faceRecognitionNet.loadFromUri("./models")
-  ]);
-
-  stepFace.classList.add("step-done");
-  setProgress(80);
-
-  const stream = await navigator.mediaDevices.getUserMedia({video:true});
-  video.srcObject = stream;
-  await video.play();
-
-  const faces = await fetch(GAS_URL).then(r=>r.json());
-
-  matcher = new faceapi.FaceMatcher(
-    faces.map(f=> new faceapi.LabeledFaceDescriptors(
-      f.label, f.descriptors.map(d=>new Float32Array(d))
-    )),
-    0.6
-  );
-
-  hideLoader();
-  startCaptureSequence();
+    const faces=await fetch(GAS_URL).then(r=>r.json());
+    matcher=new faceapi.FaceMatcher(
+      faces.map(f=>new faceapi.LabeledFaceDescriptors(f.label,f.descriptors.map(d=>new Float32Array(d)))),0.6
+    );
+    detectLoop();
+  });
 }
 
-// ================= COUNTDOWN =================
-function startCaptureSequence(){
+function startCaptureSequence() {
+
   capturePanel.classList.remove("hidden");
-  captureText.innerText="Look straight at camera";
+  captureText.innerText = "Look straight at camera";
 
-  let t=5;
-  countdownEl.innerText=t;
+  let timeLeft = 5;
+  countdownEl.innerText = timeLeft;
 
-  const timer=setInterval(()=>{
-    t--;
-    countdownEl.innerText=t;
+  const timer = setInterval(() => {
+    timeLeft--;
+    countdownEl.innerText = timeLeft;
 
-    if(t===0){
+    if (timeLeft === 0) {
       clearInterval(timer);
       capturePanel.classList.add("hidden");
       detectAndSubmit();
     }
-  },1000);
+  }, 1000);
 }
 
-// ================= FACE DETECT =================
-async function detectAndSubmit(){
+async function detectAndSubmit() {
 
-  let attempts=0;
-  let bestMatch=null;
+  let attempts = 0;
+  let bestMatch = null;
 
-  while(attempts<5){
-    const d = await faceapi.detectSingleFace(
-      video,
-      new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.5})
-    ).withFaceLandmarks().withFaceDescriptor();
+  while (attempts < 5) {
 
-    if(d){
-      bestMatch = matcher.findBestMatch(d.descriptor);
-      if(bestMatch.label!=="unknown") break;
+    const detection = await faceapi.detectSingleFace(
+	  video,
+	  new faceapi.TinyFaceDetectorOptions({
+		inputSize: 320,
+		scoreThreshold: 0.5
+	  })
+	).withFaceLandmarks().withFaceDescriptor();
+
+    if (detection) {
+      bestMatch = matcher.findBestMatch(detection.descriptor);
+      if (bestMatch.label !== "unknown") break;
     }
 
     attempts++;
-    await new Promise(r=>setTimeout(r,600));
+    await new Promise(r => setTimeout(r, 600));
   }
 
-  if(!bestMatch || bestMatch.label==="unknown"){
-    alert("Face not recognized. Try again.");
+  if (!bestMatch || bestMatch.label === "unknown") {
+    alert("Face not recognized. Please try again in good lighting.");
     stopCamera();
     return;
   }
@@ -218,49 +196,23 @@ async function detectAndSubmit(){
   submitAttendance(bestMatch.label);
 }
 
-// ================= SUBMIT =================
 async function submitAttendance(label){
-
-  if(alreadyMarked) return;
-  alreadyMarked=true;
-
   const [name,room]=label.split("|");
-  const status = getISTHour()>=22 ? "Late":"Present";
+  const status=getIST()>=22?"Late":"Present";
+  const ip=await getPublicIP();
+  stepSubmit.classList.add("step-done"); setProgress(100);
 
-  stepSubmit.classList.add("step-done");
-  setProgress(100);
-
-  const resp = await fetch(GAS_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      type:"ATTEND",
-      name,
-      room,
-      date:new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata"}).format(new Date()),
-      time:new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit"}).format(new Date()),
-      status,
-      distance:lastDistance,
-      ip:currentIP,
-      latitude:userLat,
-      longitude:userLng
-    })
-  }).then(r=>r.text());
+  const resp=await fetch(GAS_URL,{method:"POST",body:JSON.stringify({
+    type:"ATTEND",name,room,date:new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata"}).format(new Date()),
+    time:new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit"}).format(new Date()),
+    status,distance:lastDistance,ip,latitude:userLat,longitude:userLng
+  })}).then(r=>r.text());
 
   hideLoader();
 
-  if(resp==="DUPLICATE"){
-    alert("Attendance already marked.");
-    stopCamera();
-    return;
-  }
-
-  if(resp==="IP_BLOCKED"){
-    alert("Network not allowed.");
-    stopCamera();
-    return;
-  }
+  if(resp==="DUPLICATE"){ alert("Attendance already marked."); stopCamera(); return;}
+  if(resp==="IP_BLOCKED"){ alert("Connect to Hostel WiFi"); stopCamera(); return;}
 
   alert(`Attendance marked\nStatus: ${status}`);
-  statusText.innerText="✅ Attendance Marked";
   stopCamera();
 }
