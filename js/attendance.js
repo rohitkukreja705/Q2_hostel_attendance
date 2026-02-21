@@ -30,7 +30,7 @@ function updateDateTime(){
 }
 setInterval(updateDateTime,1000); updateDateTime();
 
-vigator.geolocation.getCurrentPosition(pos=>{
+navigator.geolocation.getCurrentPosition(pos=>{
   document.getElementById("liveGPS").innerText=`${pos.coords.latitude.toFixed(9)}, ${pos.coords.longitude.toFixed(9)}`;
 },{},{enableHighAccuracy:true});
 
