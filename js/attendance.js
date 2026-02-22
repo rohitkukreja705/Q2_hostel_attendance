@@ -1,10 +1,10 @@
 const video = document.getElementById("video");
 const statusText = document.getElementById("status");
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxGLHhVupOddlZrDHvqBq4n084qT1uFbHV3VPioTmQyImLt66w5QRc3lj09nwp-eh0k/exec";
-const HOSTEL_LAT = 23.250761280;
-const HOSTEL_LNG = 77.499552907;
-//const HOSTEL_LAT = 23.281280329;
-//const HOSTEL_LNG = 77.468973571;
+//const HOSTEL_LAT = 23.250761280;
+//const HOSTEL_LNG = 77.499552907;
+const HOSTEL_LAT = 23.281280329;
+const HOSTEL_LNG = 77.468973571;
 const ALLOWED_RADIUS = 50; // meters
 const capturePanel = document.getElementById("capturePanel");
 const countdownEl = document.getElementById("countdown");
@@ -181,10 +181,10 @@ async function startAttendance(){
 	// await Promise.all([...])
     alert("Models loaded");
     stepFace.classList.add("step-done"); setProgress(80);
-
+	hideLoader(); 
     const stream=await navigator.mediaDevices.getUserMedia({video:true});
     video.srcObject=stream;
-
+    hideLoader();
     const faces=await fetch(GAS_URL).then(r=>r.json());
     matcher=new faceapi.FaceMatcher(
       faces.map(f=>new faceapi.LabeledFaceDescriptors(f.label,f.descriptors.map(d=>new Float32Array(d)))),0.6
@@ -194,7 +194,7 @@ async function startAttendance(){
 }
 
 function startCaptureSequence() {
-
+  hideLoader();
   capturePanel.classList.remove("hidden");
   captureText.innerText = "Look straight at camera";
 
