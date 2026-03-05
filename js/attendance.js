@@ -29,7 +29,7 @@ function stopCamera(){
 
 function updateDateTime(){
   const now=new Date();
-  document.getElementById("liveDate").innerText=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata"}).format(now);
+  document.getElementById("liveDate").innerText=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata"}).format(now);
   document.getElementById("liveTime").innerText=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(now);
 }
 setInterval(updateDateTime,1000); updateDateTime();
