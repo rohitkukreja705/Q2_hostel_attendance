@@ -141,10 +141,40 @@ async function getPublicIP(){
   catch{return "UNKNOWN";}
 }
 
-function getIST(){ const d=new Date(); return parseInt(new Intl.DateTimeFormat("en-IN",{timeZone:"Asia/Kolkata",hour:"2-digit",hour12:false}).format(d)); }
+function getISTTime(){
+
+ const now = new Date();
+
+ const hour = parseInt(
+   new Intl.DateTimeFormat("en-IN",{
+     timeZone:"Asia/Kolkata",
+     hour:"2-digit",
+     hour12:false
+   }).format(now)
+ );
+
+ const minute = parseInt(
+   new Intl.DateTimeFormat("en-IN",{
+     timeZone:"Asia/Kolkata",
+     minute:"2-digit"
+   }).format(now)
+ );
+
+ return {hour,minute};
+}
 
 async function startAttendance(){
-  if(getIST()<21){ alert("Attendance allowed 9PM–10PM"); return; }
+  const time = getISTTime();
+
+if(time.hour < 21){
+ alert("Attendance allowed only after 9 PM");
+ return;
+}
+
+if(time.hour === 22 && time.minute >= 30){
+ alert("Attendance closed after 10:30 PM");
+ return;
+}
 
   showLoader(); setProgress(15);
 
@@ -248,7 +278,13 @@ async function detectAndSubmit() {
 
 async function submitAttendance(label){
   const [name,room]=label.split("|");
-  const status=getIST()>=22?"Late":"Present";
+  let status = "Present";
+
+	const time = getISTTime();
+	
+	if(time.hour === 22){
+	status = "Late";
+	}
   const ip=await getPublicIP();
   stepSubmit.classList.add("step-done"); setProgress(100);
 
