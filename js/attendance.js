@@ -289,7 +289,7 @@ async function submitAttendance(label){
   stepSubmit.classList.add("step-done"); setProgress(100);
 
   const resp=await fetch(GAS_URL,{method:"POST",body:JSON.stringify({
-    type:"ATTEND",name,room,date:new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Kolkata"}).format(new Date()),
+    type:"ATTEND",name,room,date:new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata"}).format(new Date()),
     time:new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",hour:"2-digit",minute:"2-digit"}).format(new Date()),
     status,distance:lastDistance,ip,latitude:userLat,longitude:userLng
   })}).then(r=>r.text());
