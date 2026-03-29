@@ -63,13 +63,13 @@ async function startAttendance() {
   const time = getISTTime();
 
   // ⏱️ SAME AS BACKEND
-  if (time.hour < 21 || (time.hour === 21 && time.minute < 30)) {
-    alert("Attendance starts at 09:30 PM");
+  if (time.hour < 21 || (time.hour === 21 && time.minute < 00)) {
+    alert("Attendance starts at 09:00 PM");
     return;
   }
 
   if (time.hour === 22 && time.minute > 30) {
-    alert("Attendance closed after 10:40 PM");
+    alert("Attendance closed after 10:30 PM");
     return;
   }
 
